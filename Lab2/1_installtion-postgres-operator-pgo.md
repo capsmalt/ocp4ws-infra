@@ -1,4 +1,4 @@
-
+ｂｎ
 # 1. Crunchy PostgreSQL Operatorのインストール  
 
 ## 1-1. 諸注意
@@ -92,6 +92,7 @@ Password: "ocppass" を入力
 **"pgo"** Namespaceを作成。
 ```
 oc create namespace pgo 
+oc project pgo
 ```
 
 **"pgo-backrest-repo-config"** Secret を作成
