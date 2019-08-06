@@ -1,4 +1,4 @@
-ｂｎ
+
 # 1. Crunchy PostgreSQL Operatorのインストール  
 
 ## 1-1. 諸注意
@@ -147,6 +147,7 @@ OpenShift Portalにログイン。
 ![](images/Catalog-OperatorHub-Postgres-Install.png)
 
 Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]する。  
+※注意: Namespaceが**pgo**であることを確認
 ![](images/Catalog-OperatorHub-Postgres-Subscription_1.png)
 
 以下図に遷移したら少し待つ。  
