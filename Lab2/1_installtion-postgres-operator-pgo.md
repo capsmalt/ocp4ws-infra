@@ -162,7 +162,7 @@ Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]
 "Approve" を選択する。  
 ![](images/Catalog-OperatorHub-Postgres-Subscription_5.png)
 
-以下図のように，CRDs(5つ)によってKubernetesが拡張されたことを確認する。  
+[Catalog]>[Installed Operators]>[Crunchy PostgreSQL Enterprise]と辿り，CRDs(5つ)によってKubernetesが拡張されたことを確認する。  
 ![](images/Catalog-OperatorHub-Postgres-Subscription_6_CRD.png)
 
 
