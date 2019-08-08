@@ -13,21 +13,30 @@ pgoは，Postgres Operatorを操作・制御するためのクライアント用
 * Postgres Operator をOCP上で動作させておく
 * Postgres Operator PodをServiceで公開しておく
 * 踏み台サーバーで oc / kubectl / pgo が実行できる
+* PGOROOT設定済であること(PGOROOT=$HOME/postgres-operator)
 
 ※pgo cli未取得の場合は，Postgres Operatorのバージョンと一致したpgoを取得してください。(https://github.com/CrunchyData/postgres-operator/releases)
+
+
+※PGOROOTが未指定の場合は，以下を実行します。Tarminalを閉じてもexportされるように.bashrcにも記載しておきます。    
+```
+cat <<EOF >> $HOME/.bashrc
+export PGOROOT=$HOME/postgres-operator
+EOF
+source $HOME./bashrc
+```
 
 ## 2-2. pgoクライアントの構成
 pgoコマンドを使って，クライアント端末(踏み台サーバー)からOperator Podに含まれるapiserverコンテナに接続するための準備を行います。
 
-* pgo実行時に使用する情報を格納するディレクトリを作成
+* pgo実行時に使用する情報を格納するディレクトリを作成
 * pgo実行時に使用する接続先情報(apiserverのURL)を指定
 * pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得
 * pgo実行時に使用するユーザー情報を作成
 
 ### 2-2-1. pgo実行前準備
-pgo実行時に使用する情報を格納するディレクトリ(my-pgo-client)を作成。  
+pgo実行時に使用する情報を格納するディレクトリ(my-pgo-client)を作成。  
 ```
-export PGOROOT=$HOME/postgres-operator
 cd $PGOROOT
 mkdir $PGOROOT/my-pgo-client
 ```
@@ -52,6 +61,7 @@ export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-
 cat <<EOF >> $HOME/.bashrc
 export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
 EOF
+source $HOME./bashrc
 ```
 
 pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得。  
@@ -67,6 +77,7 @@ export PGO_CA_CERT=$PGOROOT/my-pgo-client/server.crt
 export PGO_CLIENT_CERT=$PGOROOT/my-pgo-client/server.crt
 export PGO_CLIENT_KEY=$PGOROOT/my-pgo-client/server.key
 EOF
+source $HOME./bashrc
 ```
 
 pgo実行時に使用するユーザー情報(PGOUSER)を作成。  
