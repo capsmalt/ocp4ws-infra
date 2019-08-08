@@ -1,16 +1,15 @@
 
-# 1. Crunchy PostgreSQL Operatorのインストール  
+# 1. PostgreSQL Operatorのインストール  
 
 ## 1-1. 諸注意
 
-### 1-1-1. Crunchy PostgreSQL Operatorについて
+### 1-1-1. PostgreSQL Operatorについて
+Crunchy Data PostgreSQL Operator(以降，Postgres Operator)は，Kubernetes上におけるPostgreSQLの運用を担うOperatorです。また，専用のCLI(pgo)も用意されており，Custom Resourceの展開や制御を簡単に行うことができます。pgoの利用は[Lab2-2のハンズオン](2_usage-pgo.md)で実施します。
 
-*   Crunchy PostgreSQL Operatorは，Kubernetes上におけるPostgreSQLの運用を担う Custom ControllerとCustom Resourceから成る    
-    * PostgreSQLクラスター構築/削除
-    * Posgresインスタンスのスケールアウト/スケールイン
-    * Posgresインスタンスバックアップ/リストア
-    * etc.
-    * (以降，Postgres Operatorと呼ぶ)
+Postgres Operatorを展開することで，以下の機能をK8sクラスターに拡張できます。(抜粋)  
+* PostgreSQLクラスター構築/削除
+* Posgresインスタンスのスケールアウト/スケールイン
+* Posgresインスタンスバックアップ/リストア
 
 ### 1-1-2. 事前準備
 事前に講師から以下の対象ホストの接続情報を取得しておく。
@@ -25,14 +24,15 @@
     * `<OpenShift_Username>`: **ocpuser**
     * `<OpenShift_Password>`: **ocppass**
 * 「OpenShift Portal」のアドレス  
-    * 例) `<OpenShift_Console>`: http://console.openshiftworkshop.com
+    * 例) `<OpenShift_Console>`: https://console-openshift-console.apps.ocp4-workshop.com
     * OCP Portalログイン例):
-      * `ブラウザで https://console-openshift-console.apps.ocp4ws-00.k8show.net にアクセス`
+      * `ブラウザで https://console-openshift-console.apps.ocp4-workshop.com にアクセス`
+      * `capsmalt's Group` を選択
       * `ocpuser` / `ocppass` を入力してログイン
 * 「Openshift API」のアドレス  
-    * 例) `<OpenShift_API>`: **https://api.ocp4ws-00.k8show.net:6443** 
+    * 例) `<OpenShift_API>`: **https://api.ocp4-workshop.com:6443** 
     * ocコマンドのログイン例):
-      * `$ oc login https://api.ocp4ws-00.k8show.net:6443`
+      * `$ oc login https://api.ocp4-workshop.com:6443`
       * `ocpuser` / `ocppass` を入力してログイン
 
 ## 1-2. Postgres Operatorの展開
@@ -78,6 +78,17 @@ $PGOROOT/deploy/gen-api-keys.sh
 $PGOROOT/deploy/gen-sshd-keys.sh
 cd $PGOROOT
 ```
+
+.bashrcに "PGO_APISERVER_URL" を追記。  
+```
+cat <<EOF >> $HOME/.bashrc
+export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
+EOF
+source $HOME./bashrc
+```
+
+(※ターミナルを閉じた場合などに再度exportする必要が無くなるように設定しています。)
+
 
 ### 1-2-5. OpenShiftにログイン
 OpenShiftにコマンドからログイン。  
@@ -132,7 +143,9 @@ kubectl create configmap -n pgo pgo-config \
 ```
 
 ### 1-2-7. Operatorをインストール
-OpenShift Portalにログイン。
+OpenShift Portalにログインして，OperatorHubから Operator("Crunchy PostgresSQL Enterprise")をインストールします。  
+
+
 * 「OpenShift Portal」のアドレス  
     * 例) `<OpenShift_Console>`: http://console.openshiftworkshop.com
     * OCP Portalログイン例):
@@ -167,7 +180,9 @@ Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]
 
 
 ### 1-2-8. Postgres CRDを確認
-踏み台サーバー(Bastion Server)で，Postgres CRDを確認。
+踏み台サーバー(Bastion Server)で，Postgres CRDを確認します。
+
+ocコマンドで確認します。
 ```
 oc get crd | grep pg
 
@@ -208,6 +223,19 @@ oc get po -n pgo -o yaml
 ![](images/OperatorPod.png)  
 
 ![](images/OperatorPod-containers.png)  
+
+
+### 1-2-10. Operator Podの公開
+Operator PodをService(type:LoadBanancer)で公開します。
+
+exposeコマンドで公開。
+```
+oc expose deployment -n pgo postgres-operator --type=LoadBalancer
+oc get svc -n pgo
+
+NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)                                         AGE
+postgres-operator                LoadBalancer   172.30.114.68    a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com   8443:32455/TCP                                  130m
+```
 
 ---
 これで，Crunchy PostgreSQL Operatorの展開は完了です。  
