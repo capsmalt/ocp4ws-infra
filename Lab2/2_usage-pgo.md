@@ -2,82 +2,92 @@
 # 2. pgoの構成とPostgreSQLリソース制御  
 
 ## 2-1. 諸注意
-
 ### 2-1-1. pgoについて
+pgoは，Postgres Operatorを操作・制御するためのクライアント用CLIです。pgoはOperator Podに含まれる "apiserver" と通信することで，K8s上のPostgreSQLを制御します。例えば以下のような制御が行えます。
 
-*   pgoは，Postgres Operatorを操作・制御するためのクライアント用CLI。pgoはOperator Podである "apiserver" と通信することで，K8s上のPostgreSQLを制御する。    
-    * PostgreSQLクラスター構築/削除
-    * Posgresインスタンスのスケールアウト/スケールイン
-    * Posgresインスタンスバックアップ/リストア
-    * 上記のような制御を pgo CLIから行うことが可能
+* PostgreSQLクラスター構築/削除
+* Posgresインスタンスのスケールアウト/スケールイン
+* Posgresインスタンスバックアップ/リストア
 
 ### 2-1-2. 事前準備
-* Postgres OperatorをOCP上で動作させておく
-* 踏み台サーバーで oc / kubectl / pgo が実行できること
+* Postgres Operator をOCP上で動作させておく
+* Postgres Operator PodをServiceで公開しておく
+* 踏み台サーバーで oc / kubectl / pgo が実行できる
 
-## 2-2. pgoの構成
+※pgo cli未取得の場合は，Postgres Operatorのバージョンと一致したpgoを取得してください。(https://github.com/CrunchyData/postgres-operator/releases)
 
-### 2-2-1. Operatorをサービス公開
-まずはOperator Podに接続するためのServiceを作成してtype:LoadBalancerで公開。 
+## 2-2. pgoクライアントの構成
+pgoコマンドを使って，クライアント端末(踏み台サーバー)からOperator Podに含まれるapiserverコンテナに接続するための準備を行います。
+
+* pgo実行時に使用する情報を格納するディレクトリを作成
+* pgo実行時に使用する接続先情報(apiserverのURL)を指定
+* pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得
+* pgo実行時に使用するユーザー情報を作成
+
+### 2-2-1. pgo実行前準備
+pgo実行時に使用する情報を格納するディレクトリ(my-pgo-client)を作成。  
 ```
-oc expose deployment -n pgo postgres-operator --type=LoadBalancer
-```
-
-```
-oc get svc -n pgo
-
-postgres-operator                LoadBalancer   172.30.77.27     a8a59cbf2b73d11e99d19066aaaf6145-115501653.ap-northeast-1.elb.amazonaws.com   8443:30861/TCP                                  9h
-```
-
-上記例の場合，
-`a8a59cbf2b73d11e99d19066aaaf6145-115501653.ap-northeast-1.elb.amazonaws.com` をメモしておきます。
-
-### 2-2-2. pgo(Client用CLI)の展開
-Operator PodのapiserverのPod名を取得。
-
-```
-oc get po -n pgo
-
-postgres-operator-9777dbc48-59kms                 3/3     Running     0          9h
+export PGOROOT=$HOME/postgres-operator
+cd $PGOROOT
+mkdir $PGOROOT/my-pgo-client
 ```
 
-上記結果のPod名を使用して，apiserverの証明書を取得。
-```
-oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.key /tmp/server.key -c apiserver
-
-oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.crt /tmp/server.crt -c apiserver
-```
-
-pgo用の証明書のパスをexport。
-```
-export PGO_CA_CERT=/tmp/server.crt
-export PGO_CLIENT_CERT=/tmp/server.crt
-export PGO_CLIENT_KEY=/tmp/server.key
-```
-
-pgouserのユーザー名・パスワードを設定しexport。
-```
-echo username:password > $HOME/pgouser
-chmod 700 ~/pgouser
-export PGOUSER=$HOME/pgouser
-```
-
-Operatorのapiserverの公開リンクを指定。
-
+pgo実行時に使用するapiserverのURL(PGO_APISERVER_URL)を指定。  
 ```
 oc get svc -n pgo
 
-NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                   PORT(S)                                         AGE
-postgres-operator                LoadBalancer   172.30.77.27     a8a59cbf2b73d11e99d19066aaaf6145-115501653.ap-northeast-1.elb.amazonaws.com   8443:30861/TCP 
-                                 9h
-↓↓↓ PGO_APISERVER_URLに指定する
+NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)                                         AGE
+postgres-operator                LoadBalancer   172.30.114.68    a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com   8443:32455/TCP                                  130m
 
-export PGO_APISERVER_URL=https://aeb4c262bb73211e9b7180eb47beb561-2052260300.ap-northeast-1.elb.amazonaws.com:8443
-pgo version
+postgres-operator(Service)のEXTERNAL-IPを確認して，以下のPGO_APISERVER_URLに指定する。
+"https://" と ":8443" を忘れずに付与する。
+
+↓↓↓
+
+export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
 ```
 
-### 2-2-3. pgo(Client用CLI)の動作確認
-正常にpgo(Client)からapiserver(Operator Pod)に接続できるか確認します。
+.bashrcに "PGO_APISERVER_URL" を追記。  
+```
+cat <<EOF >> $HOME/.bashrc
+export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
+EOF
+```
+
+pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得。  
+```
+oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.key $PGOROOT/my-pgo-client/server.key -c apiserver
+oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.crt $PGOROOT/my-pgo-client/server.crt -c apiserver
+```
+
+.bashrcに 証明書関係のファイル群 を追記。  
+```
+cat <<EOF >> $HOME/.bashrc
+export PGO_CA_CERT=$PGOROOT/my-pgo-client/server.crt
+export PGO_CLIENT_CERT=$PGOROOT/my-pgo-client/server.crt
+export PGO_CLIENT_KEY=$PGOROOT/my-pgo-client/server.key
+EOF
+```
+
+pgo実行時に使用するユーザー情報(PGOUSER)を作成。  
+```
+echo username:password > $PGOROOT/my-pgo-client/pgouser
+chmod 700 $PGOROOT/my-pgo-client/pgouser
+export PGOUSER=$PGOROOT/my-pgo-client/pgouser
+```
+
+.bashrcに "PGOUSER" を追記。  
+```
+cat <<EOF >> $HOME/.bashrc
+export PGOUSER=$PGOROOT/my-pgo-client/pgouser
+EOF
+source $HOME./bashrc
+```
+
+### 2-2-2. pgoからapiserverへの接続確認
+正常にpgo(Client)からapiserver(Operator Pod)に接続できるか確認します。  
+
+pgoコマンドを実行して接続確認。  
 ```
 pgo version
 
@@ -87,8 +97,9 @@ pgo-apiserver version 4.0.1
 
 上記のように出力されれば成功です。
 
+
 ## 2-3. PostgreSQLリソース制御
-pgoから様々なリソースを制御してみよう。
+pgoから様々なリソースを制御してみましょう。
 
 ### 2-3-1. PostgreSQLクラスターの作成
 
