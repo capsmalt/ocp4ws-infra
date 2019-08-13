@@ -82,9 +82,9 @@ cd $PGOROOT
 .bashrcに "PGO_APISERVER_URL" を追記。  
 ```
 cat <<EOF >> $HOME/.bashrc
-export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
+export PGOROOT=$HOME/postgres-operator
 EOF
-source $HOME./bashrc
+source $HOME/.bashrc
 ```
 
 (※ターミナルを閉じた場合などに再度exportする必要が無くなるように設定しています。)
@@ -99,7 +99,7 @@ Username: "ocpuser" を入力
 Password: "ocppass" を入力
 ```
 
-### 1-2-6. Operatorインストールに必要なKubernetesリソースを作成
+### 1-2-6. Operatorインストールおよび操作に必要なKubernetesリソースを作成
 **"pgo"** Namespaceを作成。
 ```
 oc create namespace pgo 
@@ -110,7 +110,7 @@ oc project pgo
 ```
 kubectl create secret generic -n pgo pgo-backrest-repo-config \
   --from-file=config=$PGOROOT/conf/pgo-backrest-repo/config \
-    --from-file=sshd_config=$PGOROOT/conf/pgo-backrest-repo/sshd_config \
+  --from-file=sshd_config=$PGOROOT/conf/pgo-backrest-repo/sshd_config \
   --from-file=aws-s3-credentials.yaml=$PGOROOT/conf/pgo-backrest-repo/aws-s3-credentials.yaml \
   --from-file=aws-s3-ca.crt=$PGOROOT/conf/pgo-backrest-repo/aws-s3-ca.crt
 ```
@@ -139,7 +139,7 @@ kubectl create secret -n pgo tls pgo.tls \
 **"pgo-config"** ConfigMap を作成
 ```
 kubectl create configmap -n pgo pgo-config \
---from-file=$PGOROOT/conf/postgres-operator
+  --from-file=$PGOROOT/conf/postgres-operator
 ```
 
 ### 1-2-7. Operatorをインストール
