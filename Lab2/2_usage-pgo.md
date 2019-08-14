@@ -23,7 +23,7 @@ pgoは，Postgres Operatorを操作・制御するためのクライアント用
 cat <<EOF >> $HOME/.bashrc
 export PGOROOT=$HOME/postgres-operator
 EOF
-source $HOME./bashrc
+source $HOME/.bashrc
 ```
 
 ## 2-2. pgoクライアントの構成
@@ -50,7 +50,6 @@ postgres-operator                LoadBalancer   172.30.114.68    a6615bd17b98011
 
 postgres-operator(Service)のEXTERNAL-IPを確認して，以下のPGO_APISERVER_URLに指定する。
 "https://" と ":8443" を忘れずに付与する。
-
 ↓↓↓
 
 export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
@@ -61,11 +60,19 @@ export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-
 cat <<EOF >> $HOME/.bashrc
 export PGO_APISERVER_URL=https://a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com:8443
 EOF
-source $HOME./bashrc
+source $HOME/.bashrc
 ```
 
 pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得。  
 ```
+oc get po -n pgo
+
+NAME                                              READY   STATUS      RESTARTS   AGE
+postgres-operator-9777dbc48-59kms                 3/3     Running     0          5h18m
+
+Pod名を確認して，以下のpgo/<Pod名>:/tmp/〜 にて指定する。
+↓↓↓
+
 oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.key $PGOROOT/my-pgo-client/server.key -c apiserver
 oc cp pgo/postgres-operator-9777dbc48-59kms:/tmp/server.crt $PGOROOT/my-pgo-client/server.crt -c apiserver
 ```
@@ -77,7 +84,7 @@ export PGO_CA_CERT=$PGOROOT/my-pgo-client/server.crt
 export PGO_CLIENT_CERT=$PGOROOT/my-pgo-client/server.crt
 export PGO_CLIENT_KEY=$PGOROOT/my-pgo-client/server.key
 EOF
-source $HOME./bashrc
+source $HOME/.bashrc
 ```
 
 pgo実行時に使用するユーザー情報(PGOUSER)を作成。  
@@ -92,7 +99,7 @@ export PGOUSER=$PGOROOT/my-pgo-client/pgouser
 cat <<EOF >> $HOME/.bashrc
 export PGOUSER=$PGOROOT/my-pgo-client/pgouser
 EOF
-source $HOME./bashrc
+source $HOME/.bashrc
 ```
 
 ### 2-2-2. pgoからapiserverへの接続確認
@@ -129,6 +136,7 @@ pgo show cluster mycluster -n pgo
 Pgclusterリソースを確認。
 ```
 oc get Pgclusters
+
 NAME        AGE
 mycluster   17m
 ```
@@ -157,7 +165,8 @@ pgo test mycluster -n pgo
 
 ついでにServiceも確認。
 ```
-oc get svc
+oc get svc -n pgo
+
 NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                   PORT(S)                                         AGE
 mycluster                        ClusterIP      172.30.254.147   <none>                                                                        5432/TCP,9100/TCP,10000/TCP,2022/TCP,9187/TCP   7m49s
 mycluster-backrest-shared-repo   ClusterIP      172.30.224.82    <none>                                                                        2022/TCP                                        7m49s
@@ -175,7 +184,7 @@ created Pgreplica mycluster-hrbx
 
 Pgreplicasリソースを確認。
 ```
-oc get Pgreplicas
+oc get Pgreplicas -n pgo
 
 NAME             AGE
 mycluster-hrbx   8m45s
@@ -183,7 +192,7 @@ mycluster-hrbx   8m45s
 
 PostgresのReplica Podを確認。
 ```
-oc get pods
+oc get pods -n pgo
 NAME                                              READY   STATUS      RESTARTS   AGE
 mycluster-6c5b4ddc6-qq5zg                         1/1     Running     0          10m
 mycluster-backrest-shared-repo-668554dc6c-mvbjg   1/1     Running     0          10m
@@ -202,7 +211,7 @@ created Pgtask backrest-backup-mycluster
 ```
 
 ```
-oc get Pgtask
+oc get Pgtask -n pgo
 
 NAME                        AGE
 backrest-backup-mycluster   9s
@@ -218,7 +227,7 @@ workflow id 2176b3ad-9666-41bd-91df-081f911493f0
 ```
 
 ```
-oc get Pgtask
+oc get Pgtask -n pgo
 
 NAME                        AGE
 backrest-backup-mycluster   91s
@@ -228,7 +237,7 @@ mycluster-stanza-create     53m
 ```
 
 ```
-oc get pods
+oc get pods -n pgo
 
 NAME                                              READY   STATUS              RESTARTS   AGE
 backrest-backup-mycluster-6mmcg                   0/1     Completed           0          103s
@@ -241,7 +250,7 @@ postgres-operator-9777dbc48-59kms                 3/3     Running             0 
 ```
 
 ```
-oc get pods
+oc get pods -n pgo
 
 NAME                                              READY   STATUS      RESTARTS   AGE
 backrest-backup-mycluster-6mmcg                   0/1     Completed   0          2m21s
