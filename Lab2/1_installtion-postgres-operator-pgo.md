@@ -100,7 +100,7 @@ $ pwd
 
 上記のように出力されていればOKです。
 
-.bashrcに "PGO_APISERVER_URL" を追記しておきましょう。  
+.bashrcに "PGOROOT" を追記しておきましょう。  
 
 ```
 cat <<EOF >> $HOME/.bashrc
