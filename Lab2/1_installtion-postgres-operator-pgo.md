@@ -33,13 +33,13 @@ Postgres Operatorを展開することで，以下の機能をK8sクラスター
     >
     >
     >例) 「踏み台サーバー(Bastion Server)」のSSHログイン情報
-    > - `<Bastion_User_ID>`: **user0**
+    > - `<Bastion_User_ID>`: **user18**
     > - `<Bastion_Server_IP>`: **1.2.3.4**
     > - `<Private_Key>`: **bs-key.pem**
     >
     >実行例) 
     >```
-    >$ ssh -i bs-key.pem user0@1.2.3.4
+    >$ ssh -i bs-key.pem user18@1.2.3.4
     >```
 
 1. OpenShift4クラスターにocコマンドでログインします。
@@ -55,18 +55,18 @@ Postgres Operatorを展開することで，以下の機能をK8sクラスター
     >
     >
     >例) 「OpenShift_API」へのログイン情報
-    > - `<OpenShift_API>`: **https://api.group0.capsmalt.org:6443**
-    > - `<User_ID>`: **user0**
+    > - `<OpenShift_API>`: **https://api.group9.capsmalt.org:6443**
+    > - `<User_ID>`: **user18**
     > - `<User_PW>`: **ocppass**
     >
     >実行例) 
     >```
-    >$ oc login https://api.group0.capsmalt.org:6443  
-    >Username: user0
+    >$ oc login https://api.group9.capsmalt.org:6443  
+    >Username: user18
     >Password: ocppass
     >```
     >
-    > 上記は，Group番号が **"0"** ，User番号が **"0"** の方のログイン例です。    
+    > 上記は，Group番号が **"9"** ，User番号が **"18"** の方のログイン例です。    
 
 ### 1-2-2. GitHubからプロジェクトをクローン
 GitHubから Postgres-Operatorプロジェクトをクローンします。  
@@ -130,14 +130,14 @@ $ oc get project | grep pgo-<User_ID>
 >実行例)
 >
 >```
->$ oc new-project pgo-user0 
->$ oc get project | grep pgo-user0
+>$ oc new-project pgo-user18 
+>$ oc get project | grep pgo-user18
 >
->pgo-user0        Active
+>pgo-user18        Active
 >```
 >
 >上記のように，自身の `User_ID`を使用したプロジェクト名が出力されることを確認します。  
->(例では `pgo-user0`)
+>(例では `pgo-user18`)
 
 
 ### 1-3-2. Secretを作成します。
@@ -154,13 +154,13 @@ $ oc create secret generic -n pgo-<User_ID> pgo-backrest-repo-config \
 ```
 
 
->**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を Namespaceオプションで `-n pgo-user0` のように指定してください。**  
+>**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を使用して，Namespaceオプションで `-n pgo-user18` のように指定してください。**  
 >
 >
 >実行例)
 >
 >```
->$ oc create secret generic -n pgo-user0 pgo-backrest-repo-config \
+>$ oc create secret generic -n pgo-user18 pgo-backrest-repo-config \
 >  --from-file=config=$PGOROOT/conf/pgo-backrest-repo/config \
 >  --from-file=sshd_config=$PGOROOT/conf/pgo-backrest-repo/sshd_config \
 >  --from-file=aws-s3-credentials.yaml=$PGOROOT/conf/pgo-backrest-repo/aws-s3-credentials.yaml \
@@ -172,7 +172,7 @@ $ oc create secret generic -n pgo-<User_ID> pgo-backrest-repo-config \
 >作成したSecret (`pgo-backrest-repo-config`) が存在するか確認してみましょう。
 >
 >```
->$ oc get secret -n pgo-user0
+>$ oc get secret -n pgo-user18
 >
 >NAME                       TYPE                                  DATA   AGE
 >builder-dockercfg-zslcx    kubernetes.io/dockercfg               1      54s
@@ -197,48 +197,48 @@ OpenShift4コンソールにログインします。
 >**注意: ワークショップ参加者の方は，必ず自身に割当てられた <OpenShift_Console>，<User_ID>，<User_PW> を使用してください。**  
 >
 >例) 「OpenShift4コンソール」のログイン情報
-> - `<OpenShift_Console>`: **https://console-openshift-console.apps.group0.capsmalt.org**
+> - `<OpenShift_Console>`: **https://console-openshift-console.apps.group9.capsmalt.org**
 > - capsmalt's group を選択
-> - `<User_ID>`: **user0**
+> - `<User_ID>`: **user18**
 > - `<User_PW>`: **ocppass**
 
-Privacy Errorが出た場合は，[Advanced] > [Proceed to oauth-openshift.apps.group0.capsmalt.org (unsafe)] のように選択して進めてください。
+Privacy Errorが出た場合は，[Advanced] > [Proceed to oauth-openshift.apps.group9.capsmalt.org (unsafe)] のように選択して進めてください。
 
-![](images/ocp4-console-login-error.png)
+![](images/ocp4-i-lab2-1-console-login-error.png)
 
 [capsmalt's group] を選択し，ログイン情報を入力してコンソールにログインします。
 
-![](images/ocp4-console-login-group.png)
+![](images/ocp4-i-lab2-1-console-login-group.png)
 
-![](images/ocp4-console-login-user-pw.png)
+![](images/ocp4-i-lab2-1-console-login-user-pw.png)
 
 ### 1-4-2. OperatorHubからPostgres Operatorをインストール
 OperatorHubから，Postgres Operator ("Crunchy PostgresSQL Enterprise")をインストールします。  
 
 [Catalog]>[OperatorHub]から，[Crunchy PostgreSQL Enterprise (Community)]を開く。  
-![](images/Catalog-OperatorHub-Postgres_focus.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres_focus.png)
 
 [Continue]>[Install]と進める。  
-![](images/Catalog-OperatorHub-Postgres-Install.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Install.png)
 
 Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]する。  
 ※注意: Namespaceが**pgo-<User_ID>**であることを確認
-![](images/Catalog-OperatorHub-Postgres-Subscription_1.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_1.png)
 
 以下図に遷移したら少し待つ。  
-![](images/Catalog-OperatorHub-Postgres-Subscription_2.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_2.png)
 
 "1 requres approval" の表記を確認したら選択する。  
-![](images/Catalog-OperatorHub-Postgres-Subscription_3.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_3.png)
 
 "Preview Install Plan" を選択する。  
-![](images/Catalog-OperatorHub-Postgres-Subscription_4.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_4.png)
 
 "Approve" を選択する。  
-![](images/Catalog-OperatorHub-Postgres-Subscription_5.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_5.png)
 
 [Catalog]>[Installed Operators]>[Crunchy PostgreSQL Enterprise]と辿り，CRDs(5つ)によってKubernetesが拡張されたことを確認する。  
-![](images/Catalog-OperatorHub-Postgres-Subscription_6_CRD.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_6_CRD.png)
 
 
 ## 1-5. Postgres Operatorのインストール確認
@@ -285,9 +285,9 @@ OpenShift4コンソールからもPodやコンテナを確認してみましょ�
 
 [Workloads]>[Pods]>[postgres-operator-xxxx-xxx]>[Container]欄にて3つのコンテナが動作していることを確認できる。
 
-![](images/OperatorPod.png)  
+![](images/ocp4-i-lab2-1-OperatorPod.png)  
 
-![](images/OperatorPod-containers.png)  
+![](images/ocp4-i-lab2-1-OperatorPod-containers.png)  
 
 
 ## 1-6. Operator Podの公開
