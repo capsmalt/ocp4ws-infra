@@ -111,9 +111,7 @@ source $HOME/.bashrc
 
 >Tips:  
 >
->`.bashrc` に，`PGO_APISERVER_URL` を登録
->
->ターミナルを閉じた場合などに再度exportする必要が無くなるように設定しています。
+>`.bashrc` に，`PGOROOT` を登録するのは，ターミナルを閉じた場合などに再度exportする必要が無くなるようにするためです。
 
 ### 1-3. Postgres Operatorのインストール準備
 ### 1-3-1. プロジェクト(Namespace)の作成
@@ -150,9 +148,8 @@ $ oc create secret generic -n pgo-<User_ID> pgo-backrest-repo-config \
   --from-file=aws-s3-credentials.yaml=$PGOROOT/conf/pgo-backrest-repo/aws-s3-credentials.yaml \
   --from-file=aws-s3-ca.crt=$PGOROOT/conf/pgo-backrest-repo/aws-s3-ca.crt
   
-上記を1行で入力します。
+上記のようにバックスラッシュ (**"\"**) を入れることで改行し，多数のオプションを付与してコマンド実行しています。
 ```
-
 
 >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を使用して，Namespaceオプションで `-n pgo-user18` のように指定してください。**  
 >
@@ -168,6 +165,10 @@ $ oc create secret generic -n pgo-<User_ID> pgo-backrest-repo-config \
 >
 >secret/pgo-backrest-repo-config created
 >```
+>
+>実行イメージ図)
+>
+>![](images/ocp4-i-lab2-1-create-secret.png)
 >
 >作成したSecret (`pgo-backrest-repo-config`) が存在するか確認してみましょう。
 >
@@ -215,31 +216,64 @@ Privacy Errorが出た場合は，[Advanced] > [Proceed to oauth-openshift.apps.
 ### 1-4-2. OperatorHubからPostgres Operatorをインストール
 OperatorHubから，Postgres Operator ("Crunchy PostgresSQL Enterprise")をインストールします。  
 
-[Catalog]>[OperatorHub]から，[Crunchy PostgreSQL Enterprise (Community)]を開く。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres_focus.png)
+[Catalog]>[OperatorHub]から，[Crunchy PostgreSQL Enterprise (Community)]を開きます。
 
-[Continue]>[Install]と進める。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Install.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-focus.png)
 
-Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]する。  
-※注意: Namespaceが**pgo-<User_ID>**であることを確認
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_1.png)
+>**注意: 必ず自身のプロジェクト(`pgo-<User_ID>`)が選択されていることを確認してください。**
+
+[Continue]を選択します。
+
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-continue.png)
+
+[Install]とを選択します。
+
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-install.png)
+
+Operator Subscriptionを作成します。  
+
+- Installation Mode: `A specific namespace on cluster` (デフォルト)
+- Namespace: `pgo-<User_ID>` (自身のプロジェクト名を選択)
+- Update Channel: `alpha` (デフォルト)
+- Approval Strategy: `Manual` 
+
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subscribe.png)
 
 以下図に遷移したら少し待つ。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_2.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-overview.png)
 
 "1 requres approval" の表記を確認したら選択する。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_3.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-require-approval.png)
 
 "Preview Install Plan" を選択する。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_4.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-preview-installplan.png)
 
 "Approve" を選択する。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_5.png)
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-approve.png)
 
-[Catalog]>[Installed Operators]>[Crunchy PostgreSQL Enterprise]と辿り，CRDs(5つ)によってKubernetesが拡張されたことを確認する。  
-![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-Subscription_6_CRD.png)
+以下のような画面に遷移します。  
 
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-result.png)
+
+[Catalog]>[Installed Operators]を開き，[Crunchy PostgreSQL Enterprise]の "STATUS" 欄が "InstallSucceeded" になるのを確認します。
+
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-confirm-installed.png)
+
+>Tips:  
+>
+>Operatorのデプロイまで少し時間がかかりますので，少し待ちましょう。  
+>その間に，OpenShift4コンソールや`oc`コマンドで各リソースの作成状況を確認してみると良いでしょう。  
+>
+> OpenShift4コンソールで確認  
+> - [Workloads]>[Deployments]
+> - [Workloads]>[Pods]
+> - [Workloads]>[Secrets]
+>
+> `oc`コマンドで確認
+> ```
+> $ oc get deployment -n pgo-<User_ID>
+> $ oc get pod -n pgo-<User_ID>
+> $ oc get secret -n pgo-<User_ID>
 
 ## 1-5. Postgres Operatorのインストール確認
 ### 1-5-1. Postgres CRDを確認
@@ -254,6 +288,13 @@ pgpolicies.crunchydata.com                                  2019-08-05T04:56:10Z
 pgreplicas.crunchydata.com                                  2019-08-05T04:56:10Z
 pgtasks.crunchydata.com                                     2019-08-05T04:56:10Z
 ```
+
+OpenShift4コンソールからも確認してみます。  
+[Administration]>[Custom Resource Definitions]を開き，検索バーで `pg` と入力します。
+
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-confirm-crd.png)
+
+上図のように，5つのPostgresを制御するCRDが確認できます。
 
 ### 1-5-2. Operator Podを確認
 Postgres OperatorのDeploymentは1つのPodを管理しています。Podには3つのコンテナが含まれます。
@@ -283,11 +324,9 @@ $ oc get po -n pgo-<User_ID> -o yaml
 
 OpenShift4コンソールからもPodやコンテナを確認してみましょう。
 
-[Workloads]>[Pods]>[postgres-operator-xxxx-xxx]>[Container]欄にて3つのコンテナが動作していることを確認できる。
+[Workloads]>[Pods]>[postgres-operator-xxxx-xxx]を開くと，Podに3つのコンテナが含まれる様子や，YAML定義，リソース利用状況などが確認できます。
 
-![](images/ocp4-i-lab2-1-OperatorPod.png)  
-
-![](images/ocp4-i-lab2-1-OperatorPod-containers.png)  
+![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-confirm-Pods.png)  
 
 
 ## 1-6. Operator Podの公開
