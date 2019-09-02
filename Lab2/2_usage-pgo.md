@@ -14,17 +14,6 @@ pgoは，Postgres Operatorを操作・制御するためのクライアント用
 - OpenShift4クラスターへのアクセス情報
 - Postgres Operator がOpenShift4上で動作していること
 - Postgres Operator PodがService(type=LoadBalancer)で公開されていること
-- PGOROOTをexport済であること
-  - `$echo $PGOROOT` の結果が `/home/<User_ID>/postgres-operator` となること  
-  >
-  >**PGOROOTが未指定の場合のみ** 以下を実行します。  
-  >
-  >```
-  >cat <<EOF >> $HOME/.bashrc
-  >export PGOROOT=$HOME/postgres-operator
-  >EOF
-  >source $HOME/.bashrc
-  >```
 
 >自身でクラスターを用意してハンズオンを実施される場合は，事前に以下を準備ください。
 > - OpenShift4クラスター環境
@@ -49,6 +38,17 @@ pgo実行時に使用する情報を格納するディレクトリ(`my-pgo-clien
 $ cd $PGOROOT
 $ mkdir $PGOROOT/my-pgo-client
 ```
+
+>Tips:  
+>
+>**PGOROOTが未指定の場合のみ** 以下を実行します。  
+>
+>```
+>cat <<EOF >> $HOME/.bashrc
+>export PGOROOT=$HOME/postgres-operator
+>EOF
+>source $HOME/.bashrc
+>```
 
 ### 2-2-2. pgo実行時に使用する接続先情報(apiserverのURL)を指定
 pgo実行時に使用するapiserverのURL(`PGO_APISERVER_URL`)を確認します。
