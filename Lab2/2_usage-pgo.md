@@ -40,6 +40,7 @@ pgoコマンドを使って，クライアント端末(踏み台サーバー)か
 - pgo実行時に使用する接続先情報(apiserverのURL)を指定
 - pgo実行時に使用するクレデンシャルをOperator Podのapiserverから取得
 - pgo実行時に使用するユーザー情報を作成
+- 各変数のexport確認
 
 ### 2-2-1. pgo実行時に使用する情報を格納するディレクトリを作成
 pgo実行時に使用する情報を格納するディレクトリ(`my-pgo-client`)を作成します。
@@ -152,14 +153,13 @@ EOF
 source $HOME/.bashrc
 ```
 
-### 2-2-5. 各変数の確認
+### 2-2-5. 各変数のexport確認
 これまでの手順でいくつかの変数をexportしてきました。  
 これらの変数はpgoコマンド実行時に使用するため，正しくexportできているか確認しましょう。
 
 ```
 $ cat $HOME/.bashrc
 ...
-# User specific aliases and functions
 export PGOROOT=/home/user18/postgres-operator
 export PGO_APISERVER_URL=https://af6626834cd8011e9a4e90a9978ec148-1958014071.ap-northeast-1.elb.amazonaws.com:8443
 export PGO_CA_CERT=/home/user18/postgres-operator/my-pgo-client/server.crt
@@ -184,14 +184,16 @@ pgo-apiserver version 4.0.1
 ```
 
 上記のように出力されれば成功です。  
-もしプロンプトが返ってこなかったり，Timeoutやエラーが返ってきた場合は，Operator Podにうまく接続できていません。
 
-以下を確認してみましょう。
-
-- Operator Podが正常に動作していること ([1-5-2]())
-- Operator PodをService(type=LoadBalacer)で正常に公開できていること ([1-6)](https://github.com/capsmalt/ocp4ws-infra/blob/master/Lab2/1_installtion-postgres-operator-pgo.md#1-6-operator-pod%E3%81%AE%E5%85%AC%E9%96%8B))
-- 各変数が正しくexportされていること ([2-2-5]())
-
+>Tips: 
+>
+>もしプロンプトが返ってこなかったり，Timeoutやエラーが返ってきた場合は，Operator Podにうまく接続できていません。
+>以下を確認してみましょう。
+>
+> - Operator Podが正常に動作していること ([1-5-2](https://github.com/capsmalt/ocp4ws-infra/blob/master/Lab2/1_installtion-postgres-operator-pgo.md#1-5-2-operator-pod%E3%82%92%E7%A2%BA%E8%AA%8D))
+> - Operator PodをService(type=LoadBalacer)で正常に公開できていること ([1-6)](https://github.com/capsmalt/ocp4ws-infra/blob/master/Lab2/1_installtion-postgres-operator-pgo.md#1-6-operator-pod%E3%81%AE%E5%85%AC%E9%96%8B))
+> - 各変数が正しくexportされていること ([2-2-5](https://github.com/capsmalt/ocp4ws-infra/blob/master/Lab2/2_usage-pgo.md#2-2-5-%E5%90%84%E5%A4%89%E6%95%B0%E3%81%AE%E7%A2%BA%E8%AA%8D))
+>
 
 ## 2-4. PostgreSQLリソース制御
 pgoから様々なリソースを制御してみましょう。
