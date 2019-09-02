@@ -7,14 +7,9 @@ OpenShift4に付随するOperatorHub上のCommunity版のPostgreSQL Operatorを�
 　
 GitHubで公開されているOSSの [CrunchyData/postgres-operator](https://github.com/CrunchyData/postgres-operator) を使用して，Kubernetesのディストリビューションの一つであるOpenShift(OCP)上にOperatorをインストールする手順を学びます。さらにOCP上に展開したPostgres OperatorのPodに対して，クライアント環境からpgo(Postgres Operatorを制御するCLI)を使って接続し，制御を行います。専用CLI(pgo)でのCustom Resource(Postgresクラスターやレプリカ，タスクなど)の制御を体験します。
 
+![](images/ocp4-i-Lab2-overview.png)
 
-## 前提条件
-- OpenShift Container Platform 4.Xクラスター環境
-- oc，kubectlコマンドのセットアップ  
-- pgo コマンドのセットアップ(パスが通っていればOK)
-- system:adminの権限
-
-### 実装手順
+### 実施手順
 作業は以下の手順どおりに進める。
 
 1. [Crunchy PostgreSQL Operatorのインストール](1_installtion-postgres-operator-pgo.md)  
