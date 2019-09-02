@@ -239,16 +239,20 @@ Operator Subscriptionを作成します。
 
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subscribe.png)
 
-以下図に遷移したら少し待つ。  
+以下図に遷移したら，少し待ちます。 
+
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-overview.png)
 
-"1 requres approval" の表記を確認したら選択する。  
+"1 requres approval" の表記を確認したら選択します。
+
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-require-approval.png)
 
-"Preview Install Plan" を選択する。  
+"Preview Install Plan" を選択します。
+
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-preview-installplan.png)
 
-"Approve" を選択する。  
+"Approve" を選択します。
+
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-subs-approve.png)
 
 以下のような画面に遷移します。  
@@ -282,11 +286,11 @@ Operator Subscriptionを作成します。
 ```
 $ oc get crd | grep pg
 
-pgbackups.crunchydata.com                                   2019-08-05T04:56:10Z
-pgclusters.crunchydata.com                                  2019-08-05T04:56:10Z
-pgpolicies.crunchydata.com                                  2019-08-05T04:56:10Z
-pgreplicas.crunchydata.com                                  2019-08-05T04:56:10Z
-pgtasks.crunchydata.com                                     2019-08-05T04:56:10Z
+pgbackups.crunchydata.com                                   2019-09-02T10:59:34Z
+pgclusters.crunchydata.com                                  2019-09-02T10:59:34Z
+pgpolicies.crunchydata.com                                  2019-09-02T10:59:34Z
+pgreplicas.crunchydata.com                                  2019-09-02T10:59:34Z
+pgtasks.crunchydata.com                                     2019-09-02T10:59:34Z
 ```
 
 OpenShift4コンソールからも確認してみます。  
@@ -307,20 +311,34 @@ ocコマンドで確認します。
 
 ```
 $ oc get deploy -n pgo-<User_ID>
-
-NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
-postgres-operator                1/1     1            1           9h
+$ oc describe deploy postgres-operator -n pgo-<User_ID>
 ```
+
+>実行例)
+>
+>```
+>$ oc get deploy -n pgo-user18
+>
+>NAME                READY   UP-TO-DATE   AVAILABLE   AGE
+>postgres-operator   1/1     1            1           25m
+>
+>
+>$ oc describe deploy postgres-operator -n pgo-user18
+>(出力結果は表示していません)
+>```
 
 ```
 $ oc get po -n pgo-<User_ID>
-
-postgres-operator-9777dbc48-59kms                 3/3     Running     0          9h
 ```
 
-```
-$ oc get po -n pgo-<User_ID> -o yaml
-```
+>実行例)
+>
+>```
+>$ oc get po -n pgo-user18
+>
+>NAME                                 READY   STATUS    RESTARTS   AGE
+>postgres-operator-74c4fbf46c-r7llt   3/3     Running   0          33m
+
 
 OpenShift4コンソールからもPodやコンテナを確認してみましょう。
 
@@ -328,6 +346,13 @@ OpenShift4コンソールからもPodやコンテナを確認してみましょ�
 
 ![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-confirm-Pods.png)  
 
+
+>Tips:
+>
+>OpenShift4コンソール上のターミナルを使用して，Podに含まれるコンテナ内を確認できます。  
+>すぐにコンテナアクセスができるため，デバッグなどで役立つ場合があります。  
+>
+>![](images/ocp4-i-lab2-1-Catalog-OperatorHub-Postgres-confirm-pods-terminal.png)
 
 ## 1-6. Operator Podの公開
 Operator PodをService(type:LoadBanancer)を使用して公開します。
