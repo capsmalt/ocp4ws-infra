@@ -12,74 +12,96 @@ Postgres Operatorを展開することで，以下の機能をK8sクラスター
 * Posgresインスタンスバックアップ/リストア
 
 ### 1-1-2. 事前準備
-事前に講師から以下の対象ホストの接続情報を取得しておく。
+- 踏み台サーバー(Bastion Server)へのアクセス情報
+- OpenShift4クラスターへのアクセス情報
 
-* 踏み台サーバー(Bastion Server)のSSHログイン情報  
-    * 例) `<Bastion_User>`: **ec2-user**
-    * 例) `<Bastion_Server_IP>`: **18.31.178.231**
-    * 例) `<Private_Key>`: **key.pem**
-    * SSHログイン例):
-      * `$ ssh -i key.pem ec2-user@18.31.178.231`
-* 「OpenShift」のログイン情報 
-    * `<OpenShift_Username>`: **ocpuser**
-    * `<OpenShift_Password>`: **ocppass**
-* 「OpenShift Portal」のアドレス  
-    * 例) `<OpenShift_Console>`: https://console-openshift-console.apps.ocp4-workshop.com
-    * OCP Portalログイン例):
-      * `ブラウザで https://console-openshift-console.apps.ocp4-workshop.com にアクセス`
-      * `capsmalt's Group` を選択
-      * `ocpuser` / `ocppass` を入力してログイン
-* 「Openshift API」のアドレス  
-    * 例) `<OpenShift_API>`: **https://api.ocp4-workshop.com:6443** 
-    * ocコマンドのログイン例):
-      * `$ oc login https://api.ocp4-workshop.com:6443`
-      * `ocpuser` / `ocppass` を入力してログイン
+>自身でハンズオンを実施される場合は，事前に以下を準備ください。
+> - OpenShift4クラスター環境
+> - ocコマンドのセットアップ
+> - 利用ユーザーへのcluster-adminの権限付与
 
-## 1-2. Postgres Operatorの展開
+## 1-2. Postgres Operatorプロジェクトの取得
+### 1-2-1. ocコマンドによるログイン(oc login)
+1. 踏み台サーバー(Bastion Server)にSSHでログインします。
+    ```
+    $ ssh -i <Private_Key> <Bastion_User_ID>@<Bastion_Server_IP>
+  
+    y
+    ```
 
-### 1-2-1. 踏み台サーバー(Bastion Server) にログイン
-SSHにて踏み台サーバー(Bastion Server)にログイン。  
-```
-ssh -i <Private_Key> <Bastion_User>@<Bastion Server IP>
+    >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <Bastion_User_ID>，<Bastion_Servier_IP>，<Private_Key> を使用してください。**  
+    >
+    >
+    >例) 「踏み台サーバー(Bastion Server)」のSSHログイン情報
+    > - `<Bastion_User_ID>`: **user0**
+    > - `<Bastion_Server_IP>`: **1.2.3.4**
+    > - `<Private_Key>`: **bs-key.pem**
+    >
+    >実行例) 
+    >```
+    >$ ssh -i bs-key.pem user0@1.2.3.4
+    >```
 
-y
+1. OpenShift4クラスターにocコマンドでログインします。
+
+    ```
+    $ oc login <OpenShift_API>
+
+    Username: "<User_ID>" を入力
+    Password: "<User_PW>" を入力
+    ```
+
+    >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <OpenShift_API>，<User_ID>，<User_PW> を使用してください。**  
+    >
+    >
+    >例) 「OpenShift_API」へのログイン情報
+    > - `<OpenShift_API>`: **https://api.group0.capsmalt.org:6443**
+    > - `<User_ID>`: **user0**
+    > - `<User_PW>`: **ocppass**
+    >
+    >実行例) 
+    >```
+    >$ oc login https://api.group0.capsmalt.org:6443  
+    >Username: user0
+    >Password: ocppass
+    >```
+    >
+    > 上記は，Group番号が **"0"** ，User番号が **"0"** の方のログイン例です。    
+
+### 1-2-2. GitHubからプロジェクトをクローン
+GitHubから Postgres-Operatorプロジェクトをクローンします。  
+
+```
+$ git clone https://github.com/capsmalt/postgres-operator.git
+$ cd postgres-operator
+$ ls
+
+Gopkg.lock         PULL_REQUEST_TEMPLATE.md  apiservermsgs  controller        operator              redhat   util
+Gopkg.toml         README.md                 bin            crunchy_logo.png  pgo                   rhel7    vendor
+ISSUE_TEMPLATE.md  ansible                   btn.png        deploy            pgo-backrest          sshutil
+LICENSE.md         apis                      centos7        examples          pgo-scheduler         testing
+Makefile           apiserver                 conf           hugo              postgres-operator.go  tlsutil
+Makefile.buildah   apiserver.go              config         kubeapi           pv                    ubi7
 ```
 
-### 1-2-2. Postgres Operatorプロジェクトを取得
-GitHubからクローン。  
+正しいプロジェクトをクローンできていると上記のように出力されます。
+
+
+### 1-2-3. ルートディレクトリのパスを設定 (export $PGOROOT)
+この後何度も使用するため，Postgres-Operatorディレクトリのパスを登録しておきます。
+
 ```
-git clone https://github.com/capsmalt/postgres-operator.git
-cd postgres-operator
+$ export PGOROOT=$HOME/postgres-operator
+$ cd $PGOROOT
+$ pwd
+
+/home/<User_ID>/postgres-operator
 ```
 
-### 1-2-3. Operator構成の編集
-Imageタグと，StorageClassタイプを変更。
-```
-vi conf/postgres-operator/pgo.yaml 
-...
-CCPImageTag:  centos7-11.3-2.4.1
-...
-...
-storageos:
-  AccessMode:  ReadWriteOnce
-  Size:  1G
-  StorageType:  dynamic
-  StorageClass:  gp2
-  Fsgroup:  26
-...
-```
+上記のように出力されていればOKです。
 
-### 1-2-4. Operator API用の証明書を作成
-Operator API用の自己署名証明書を作成。
-```
-export PGOROOT=$HOME/postgres-operator
-cd $PGOROOT/deploy
-$PGOROOT/deploy/gen-api-keys.sh
-$PGOROOT/deploy/gen-sshd-keys.sh
-cd $PGOROOT
-```
+.bashrcに "PGO_APISERVER_URL" を追記しておきましょう。  
 
-.bashrcに "PGO_APISERVER_URL" を追記。  
 ```
 cat <<EOF >> $HOME/.bashrc
 export PGOROOT=$HOME/postgres-operator
@@ -87,71 +109,111 @@ EOF
 source $HOME/.bashrc
 ```
 
-(※ターミナルを閉じた場合などに再度exportする必要が無くなるように設定しています。)
+>Tips:  
+>
+>`.bashrc` に，`PGO_APISERVER_URL` を登録
+>
+>ターミナルを閉じた場合などに再度exportする必要が無くなるように設定しています。
 
+### 1-3. Postgres Operatorのインストール準備
+### 1-3-1. プロジェクト(Namespace)の作成
+Postgres Operatorを動作させるプロジェクトを作成します。
 
-### 1-2-5. OpenShiftにログイン
-OpenShiftにコマンドからログイン。  
 ```
-oc login <OpenShift_API>
-
-Username: "ocpuser" を入力
-Password: "ocppass" を入力
-```
-
-### 1-2-6. Operatorインストールおよび操作に必要なKubernetesリソースを作成
-**"pgo"** Namespaceを作成。
-```
-oc create namespace pgo 
-oc project pgo
+$ oc new-project pgo-<User_ID> 
+$ oc get project | grep pgo-<User_ID>
 ```
 
-**"pgo-backrest-repo-config"** Secret を作成
+>**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を使用してください。**  
+>
+>
+>実行例)
+>
+>```
+>$ oc new-project pgo-user0 
+>$ oc get project | grep pgo-user0
+>
+>pgo-user0        Active
+>```
+>
+>上記のように，自身の `User_ID`を使用したプロジェクト名が出力されることを確認します。  
+>(例では `pgo-user0`)
+
+
+### 1-3-2. Secretを作成します。
+Postgresクラスターのバックアップ作成に必要なSecret (`pgo-backrest-repo-config`)を作成します。  
+
 ```
-kubectl create secret generic -n pgo pgo-backrest-repo-config \
+$ oc create secret generic -n pgo-<User_ID> pgo-backrest-repo-config \
   --from-file=config=$PGOROOT/conf/pgo-backrest-repo/config \
   --from-file=sshd_config=$PGOROOT/conf/pgo-backrest-repo/sshd_config \
   --from-file=aws-s3-credentials.yaml=$PGOROOT/conf/pgo-backrest-repo/aws-s3-credentials.yaml \
   --from-file=aws-s3-ca.crt=$PGOROOT/conf/pgo-backrest-repo/aws-s3-ca.crt
+  
+上記を1行で入力します。
 ```
 
-**"pgo-auth-secret"** Secret を作成
-```
-kubectl create secret generic -n pgo pgo-auth-secret \
-  --from-file=server.crt=$PGOROOT/conf/postgres-operator/server.crt \
-  --from-file=server.key=$PGOROOT/conf/postgres-operator/server.key \
-  --from-file=pgouser=$PGOROOT/conf/postgres-operator/pgouser \
-  --from-file=pgorole=$PGOROOT/conf/postgres-operator/pgorole
-```
 
-既存のクレデンシャルを削除 (存在しない場合は not found になりますが正常です)
-```
-kubectl delete secret -n pgo tls pgo.tls
-```
+>**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を Namespaceオプションで `-n pgo-user0` のように指定してください。**  
+>
+>
+>実行例)
+>
+>```
+>$ oc create secret generic -n pgo-user0 pgo-backrest-repo-config \
+>  --from-file=config=$PGOROOT/conf/pgo-backrest-repo/config \
+>  --from-file=sshd_config=$PGOROOT/conf/pgo-backrest-repo/sshd_config \
+>  --from-file=aws-s3-credentials.yaml=$PGOROOT/conf/pgo-backrest-repo/aws-s3-credentials.yaml \
+>  --from-file=aws-s3-ca.crt=$PGOROOT/conf/pgo-backrest-repo/aws-s3-ca.crt
+>
+>secret/pgo-backrest-repo-config created
+>```
+>
+>作成したSecret (`pgo-backrest-repo-config`) が存在するか確認してみましょう。
+>
+>```
+>$ oc get secret -n pgo-user0
+>
+>NAME                       TYPE                                  DATA   AGE
+>builder-dockercfg-zslcx    kubernetes.io/dockercfg               1      54s
+>builder-token-5c84k        kubernetes.io/service-account-token   4      54s
+>builder-token-fdrjm        kubernetes.io/service-account-token   4      54s
+>default-dockercfg-7csct    kubernetes.io/dockercfg               1      54s
+>default-token-hwf5d        kubernetes.io/service-account-token   4      54s
+>default-token-zpx46        kubernetes.io/service-account-token   4      54s
+>deployer-dockercfg-spqcl   kubernetes.io/dockercfg               1      54s
+>deployer-token-mhpbl       kubernetes.io/service-account-token   4      54s
+>deployer-token-xlvq8       kubernetes.io/service-account-token   4      54s
+>pgo-backrest-repo-config   Opaque                                4      50s
+>```
+>
 
-pgi-apiserverへのクレデンシャルを作成
-```
-kubectl create secret -n pgo tls pgo.tls \
-  --key=$PGOROOT/conf/postgres-operator/server.key \
-  --cert=$PGOROOT/conf/postgres-operator/server.crt
-```
+## 1-4. Operatorをインストール
+### 1-4-1. ブラウザからOpenShift4コンソールにログイン
+OpenShift4コンソールにログインします。
 
-**"pgo-config"** ConfigMap を作成
-```
-kubectl create configmap -n pgo pgo-config \
-  --from-file=$PGOROOT/conf/postgres-operator
-```
+ブラウザ(Chrome or Firefox)からOpenShift4のコンソールにログインします。
 
-### 1-2-7. Operatorをインストール
-OpenShift Portalにログインして，OperatorHubから Operator("Crunchy PostgresSQL Enterprise")をインストールします。  
+>**注意: ワークショップ参加者の方は，必ず自身に割当てられた <OpenShift_Console>，<User_ID>，<User_PW> を使用してください。**  
+>
+>例) 「OpenShift4コンソール」のログイン情報
+> - `<OpenShift_Console>`: **https://console-openshift-console.apps.group0.capsmalt.org**
+> - capsmalt's group を選択
+> - `<User_ID>`: **user0**
+> - `<User_PW>`: **ocppass**
 
+Privacy Errorが出た場合は，[Advanced] > [Proceed to oauth-openshift.apps.group0.capsmalt.org (unsafe)] のように選択して進めてください。
 
-* 「OpenShift Portal」のアドレス  
-    * 例) `<OpenShift_Console>`: http://console.openshiftworkshop.com
-    * OCP Portalログイン例):
-      * `ブラウザで https://console-openshift-console.apps.ocp4ws-00.k8show.net にアクセス`
-      * `ocpuser` / `ocppass` を入力してログイン
+![](images/ocp4-console-login-error.png)
 
+[capsmalt's group] を選択し，ログイン情報を入力してコンソールにログインします。
+
+![](images/ocp4-console-login-group.png)
+
+![](images/ocp4-console-login-user-pw.png)
+
+### 1-4-2. OperatorHubからPostgres Operatorをインストール
+OperatorHubから，Postgres Operator ("Crunchy PostgresSQL Enterprise")をインストールします。  
 
 [Catalog]>[OperatorHub]から，[Crunchy PostgreSQL Enterprise (Community)]を開く。  
 ![](images/Catalog-OperatorHub-Postgres_focus.png)
@@ -160,7 +222,7 @@ OpenShift Portalにログインして，OperatorHubから Operator("Crunchy Post
 ![](images/Catalog-OperatorHub-Postgres-Install.png)
 
 Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]する。  
-※注意: Namespaceが**pgo**であることを確認
+※注意: Namespaceが**pgo-<User_ID>**であることを確認
 ![](images/Catalog-OperatorHub-Postgres-Subscription_1.png)
 
 以下図に遷移したら少し待つ。  
@@ -179,12 +241,12 @@ Approval Strategy "Manual"を選択し，他はデフォルト値で [Subscribe]
 ![](images/Catalog-OperatorHub-Postgres-Subscription_6_CRD.png)
 
 
-### 1-2-8. Postgres CRDを確認
-踏み台サーバー(Bastion Server)で，Postgres CRDを確認します。
+## 1-5. Postgres Operatorのインストール確認
+### 1-5-1. Postgres CRDを確認
+踏み台サーバー(Bastion Server)から `oc` コマンドを使ってPostgres CRDを確認します。
 
-ocコマンドで確認します。
 ```
-oc get crd | grep pg
+$ oc get crd | grep pg
 
 pgbackups.crunchydata.com                                   2019-08-05T04:56:10Z
 pgclusters.crunchydata.com                                  2019-08-05T04:56:10Z
@@ -193,49 +255,58 @@ pgreplicas.crunchydata.com                                  2019-08-05T04:56:10Z
 pgtasks.crunchydata.com                                     2019-08-05T04:56:10Z
 ```
 
-### 1-2-9. Operator Podを確認
+### 1-5-2. Operator Podを確認
 Postgres OperatorのDeploymentは1つのPodを管理しています。Podには3つのコンテナが含まれます。
 
 * operator
 * scheduler
 * apiserver
 
-ocコマンドで確認。
+ocコマンドで確認します。
+
 ```
-oc get deploy -n pgo
+$ oc get deploy -n pgo-<User_ID>
 
 NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
 postgres-operator                1/1     1            1           9h
 ```
 
 ```
-oc get po -n pgo
+$ oc get po -n pgo-<User_ID>
 
 postgres-operator-9777dbc48-59kms                 3/3     Running     0          9h
 ```
 
 ```
-oc get po -n pgo -o yaml
+$ oc get po -n pgo-<User_ID> -o yaml
 ```
 
-[OCP_Portal]>[Workloads]>[Pods]>[postgres-operator-xxxx-xxx]>[Container]欄にて3つのコンテナが動作していることを確認できる。
+OpenShift4コンソールからもPodやコンテナを確認してみましょう。
+
+[Workloads]>[Pods]>[postgres-operator-xxxx-xxx]>[Container]欄にて3つのコンテナが動作していることを確認できる。
 
 ![](images/OperatorPod.png)  
 
 ![](images/OperatorPod-containers.png)  
 
 
-### 1-2-10. Operator Podの公開
-Operator PodをService(type:LoadBanancer)で公開します。
+## 1-6. Operator Podの公開
+Operator PodをService(type:LoadBanancer)を使用して公開します。
 
-exposeコマンドで公開。
+今回は `oc expose` コマンドを使用します。
+
 ```
-oc expose deployment -n pgo postgres-operator --type=LoadBalancer
-oc get svc -n pgo
+$ oc expose deployment -n pgo-<User_ID> postgres-operator --type=LoadBalancer
+$ oc get svc -n pgo
 
 NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)                                         AGE
 postgres-operator                LoadBalancer   172.30.114.68    a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com   8443:32455/TCP                                  130m
 ```
+
+>Tips:  
+>
+>"EXTERNAL-IP" の項目が "pending" になっている場合は，AWS上のELBの準備に時間がかかっているためです。  
+>実績値としては，30ユーザーほどで同時に実施した場合，5-10秒待つとIPアドレスが反映されました。
 
 ---
 これで，Crunchy PostgreSQL Operatorの展開は完了です。  
