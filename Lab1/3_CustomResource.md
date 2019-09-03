@@ -47,7 +47,7 @@ JMX Prometheus ExporterのServiceのラベル名(図は「app=jboss-eap-promethe
 
 -------
 
-「jmx-monitor」プロジェクトの[Catalog]>[Intalled Operators]>[Prometheus Operator]を選択し、[Prometheus]タブの「Create Prometheus」から、以下の「Kind: Prometheus」を定義します。    
+「jmx-monitor-<User_ID>」プロジェクトの[Catalog]>[Intalled Operators]>[Prometheus Operator]を選択し、[Prometheus]タブの「Create Prometheus」から、以下の「Kind: Prometheus」を定義します。    
 ※この際、Projectが「jmx-monitor-<User_ID>」であることを確認します。  
 
 ![Create Prometheus](images/create-prometheus.jpg "Create Prometheus")
