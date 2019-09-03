@@ -152,7 +152,7 @@ prometheus-monitoring   0/2     125m
 ```
 $ oc get statefulset/prometheus-monitoring -n jmx-monitor-<User_ID> -o=jsonpath='{.spec.template.spec.containers[2].args.resources.limits}' 
 map[cpu:25m memory:10Mi]
-$ oc edit statefulset/prometheus-monitoring -n jmx-monitor
+$ oc edit statefulset/prometheus-monitoring -n jmx-monitor-<User_ID>
 
 ### rules-configmap-reloaderのMemory Limitを10Miから30Miに引き上げる
 ```
@@ -205,10 +205,10 @@ https://docs.openshift.com/container-platform/3.11/architecture/additional_conce
 ここでは事前に、「JMX Monitor(jmx-monitor)」のPrometheus Operatorに設定したサービスアカウント(prometheus-k8s)に対して、「JMX Exporter(jmx)」プロジェクトに参照権限を付与しています。また、「JMX Exporter(jmx)」プロジェクトに対するPodネットワーク許可を追加しています。
 
 ```
-$ oc adm policy add-role-to-user view system:serviceaccount:jmx-monitor:prometheus-k8s -n jmx-<User_ID>
-clusterrole.rbac.authorization.k8s.io/view added: "system:serviceaccount:jmx-monitor:prometheus-k8s"
+$ oc adm policy add-role-to-user view system:serviceaccount:jmx-monitor-<User_ID>:prometheus-k8s -n jmx-<User_ID>
+clusterrole.rbac.authorization.k8s.io/view added: "system:serviceaccount:jmx-monitor-<User_ID>:prometheus-k8s"
 
-$ oc adm pod-network join-projects --to=jmx jmx-monitor-<User_ID>
+$ oc adm pod-network join-projects --to=jmx-<User_ID> jmx-monitor-<User_ID>
 using plugin: "redhat/openshift-ovs-networkpolicy", managing pod network is only supported for openshift multitenant network plugin
 ```
 
