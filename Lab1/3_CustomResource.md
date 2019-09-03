@@ -266,3 +266,12 @@ Targetが正しく表示でき、StateがUP状態であれば、JMXの値も確�
 以上でPrometheus Operatorの基本利用は完了です。     
 同じ要領で、AlertManagerも設定してみましょう。     
 参考：　https://sysdig.com/blog/kubernetes-monitoring-prometheus-operator-part3/
+
+
+# 重要: Lab1で作成したプロジェクトをクリーンナップ
+以下の`oc`コマンドで2つのプロジェクトを削除しましょう。
+
+```
+$ oc delete project jmx-<User_ID>
+$ oc delete project jmx-monitor-<User_ID>
+```
