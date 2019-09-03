@@ -36,3 +36,4 @@ https://issues.jboss.org/browse/PRODMGT-1855
 https://github.com/jboss-openshift/cct_module/blob/master/jboss/container/prometheus/api/README.adoc  
 * JBoss EAP 6.4 Container Image (1.9-19) Dockerfile   
 https://access.redhat.com/containers/?tab=docker-file#/registry.access.redhat.com/jboss-eap-6/eap64-openshift/images/1.9-191  
+
