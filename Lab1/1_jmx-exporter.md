@@ -13,106 +13,173 @@ Docker Build Strategy: Dockerfile にビルド済み JAR ファイルを取得�
 S2I: pom.xml に Dependency をセットし、S2I 実行時に Maven でビルドする  
 
 ### 1-1-2. 事前準備
-事前に講師から以下の対象ホストの接続情報を取得しておく。
+- 踏み台サーバー(Bastion Server)へのアクセス情報
+- OpenShift4クラスターへのアクセス情報
 
-* 踏み台サーバー(Bastion Server)のSSHログイン情報  
-* 「OpenShift Portal」のアドレス  
-例: http://console.openshiftworkshop.com  
-* 「Openshift API」のアドレス <OpenShift API>  
-例: https://api.cluster.openshiftworkshop.com:6443  
-* OpenShiftの(system:admin)ログイン情報
+>自身でハンズオンを実施される場合は，事前に以下を準備ください。
+> - OpenShift4クラスター環境
+> - ocコマンドのセットアップ
+> - 利用ユーザーへのcluster-adminの権限付与
 
 ## 1-2. アプリケーション展開
 
-### 1-2-1. OpenShiftログイン  
-SSHにて踏み台サーバー(Bastion Server)にログイン。
-```
-$ ssh <Bastion User>@<Bastion Server>
-password: <Bastion Password>
-```
+### 1-2-1. OpenShift4へのログイン  
+1. 踏み台サーバー(Bastion Server)にSSHでログインします。
+    ```
+    $ ssh -i <Private_Key> <Bastion_User_ID>@<Bastion_Server_IP>
+  
+    y
+    ```
 
+    >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <Bastion_User_ID>，<Bastion_Servier_IP>，<Private_Key> を使用してください。**  
+    >
+    >
+    >例) 「踏み台サーバー(Bastion Server)」のSSHログイン情報
+    > - `<Bastion_User_ID>`: **user18**
+    > - `<Bastion_Server_IP>`: **1.2.3.4**
+    > - `<Private_Key>`: **bs-key.pem**
+    >
+    >実行例) 
+    >```
+    >$ ssh -i bs-key.pem user18@1.2.3.4
+    >```
 
-OpenShift APIのドメインをもとに、コマンドからOpenShiftにログインを行う。    
-ここではノードを確認することで、接続の可否を確認します。  
-※OCコマンドは事前にインストールしておく。[OC Command Install](X_GetOCcommand.md)  
-```
-$ oc login <OpenShift API>
-Username: <OpenShift User>
-Password: <OpenShift Password>
-Login successful.
-$ oc get node  
-NAME                                              STATUS   ROLES          AGE    VERSION   
-ip-10-0-132-236.ap-southeast-1.compute.internal   Ready    infra,worker   98m    v1.13.4+c9e4f28ff  
-ip-10-0-137-222.ap-southeast-1.compute.internal   Ready    master         126m   v1.13.4+c9e4f28ff  
-ip-10-0-137-90.ap-southeast-1.compute.internal    Ready    worker         117m   v1.13.4+c9e4f28ff  
-…
-$ oc project
-Using project "default" on server "https://<OpenShift API>".
-```
+1. OpenShift4クラスターにocコマンドでログインします。
+
+    OpenShift APIのドメインをもとに，コマンドからOpenShiftにログインを行います。  
+    ここではノードを確認することで，接続の可否を確認します。  
+
+    ```
+    $ oc login <OpenShift_API>
+
+    Username: "<User_ID>" を入力
+    Password: "<User_PW>" を入力
+    ```
+
+    >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <OpenShift_API>，<User_ID>，<User_PW> を使用してください。**  
+    >
+    >
+    >例) 「OpenShift_API」へのログイン情報
+    > - `<OpenShift_API>`: **https://api.group9.capsmalt.org:6443**
+    > - `<User_ID>`: **user18**
+    > - `<User_PW>`: **ocppass**
+    >
+    >実行例) 
+    >```
+    >$ oc login https://api.group9.capsmalt.org:6443  
+    >Username: user18
+    >Password: ocppass
+    >```
+    >
+    > 上記は，Group番号が **"9"** ，User番号が **"18"** の方のログイン例です。    
+
+    次に，OpenShift4クラスターを構成するノードを確認します。  
+       
+    ```
+    $ oc get node  
+    
+    NAME                                              STATUS   ROLES    AGE   VERSION
+    ip-10-0-128-108.ap-northeast-1.compute.internal   Ready    master   15h   v1.13.4+509f0153f
+    ip-10-0-141-52.ap-northeast-1.compute.internal    Ready    worker   15h   v1.13.4+509f0153f
+    ip-10-0-151-196.ap-northeast-1.compute.internal   Ready    worker   15h   v1.13.4+509f0153f
+    ip-10-0-159-143.ap-northeast-1.compute.internal   Ready    master   15h   v1.13.4+509f0153f
+    ip-10-0-162-88.ap-northeast-1.compute.internal    Ready    master   15h   v1.13.4+509f0153f
+    ip-10-0-175-15.ap-northeast-1.compute.internal    Ready    worker   15h   v1.13.4+509f0153f
+    ```
+    
+    >上記のように，複数台のMasterとWorkerノードで構成されており，STATUSが Readyであることを確認します。
+    >なお，ハンズオン環境においては，ノード台数が異なる場合があります。
 
 ### 1-2-2. アプリケーションビルド  
-監視対象アプリケーション用の「jmx」という名前のプロジェクトを作る。
-```
-$ oc new-project jmx
-$ oc project
-Using project "jmx" on server "https://<OpenShift API>".
-```
+1. 監視対象アプリケーション用の「jmx-<User_ID>」という名前のプロジェクトを作ります。
+
+    ```
+    $ oc new-project jmx-<User_ID>
+    $ oc project
+    Using project "jmx-<User_ID>" on server "https://<OpenShift API>".
+    ```
+
+    >**※注意: ワークショップ参加者の方は，必ず自身に割当てられた <User_ID> を使用してください。**  
+    >
+    >
+    >実行例)
+    >
+    >```
+    >$ oc new-project jmx-user18 
+    >$ oc get project | grep jmx-user18
+    >
+    >jmx-user18        Active
+    >```
+    >
+    >上記のように，自身の `User_ID`を使用したプロジェクト名が出力されることを確認します。  
+    >(例では `jmx-user18`)
 
 
-アプリケーションをリポジトリからCloneして、「jboss-eap-prometheus」イメージをビルド
-```
-$ git clone https://github.com/openlab-red/jboss-eap-prometheus
-$ cd ./jboss-eap-prometheus/
-$ oc new-build . -n jmx
---> Found Docker image b72b49b (18 months old) from registry.access.redhat.com for "registry.access.redhat.com/jboss-eap-7/eap70-openshift:latest"
-…
---> Success
-```
+1. アプリケーションをリポジトリからCloneして，「jboss-eap-prometheus」イメージをビルドします。
 
-ビルドの状況をocコマンドと、OpenShift Portalから確認
-```
-$ oc logs -f bc/jboss-eap-prometheus
-…
-Writing manifest to image destination
-Storing signatures
-Push successful
-※イメージがPushされると動的にログから開放されるので待つ。
-(もし「Errorとなってしまった場合は」、[Ctl] + [C]で出て再度やり直す)
+    ```
+    $ git clone https://github.com/openlab-red/jboss-eap-prometheus
+    $ cd ./jboss-eap-prometheus/
+    $ oc new-build . -n jmx-<User_ID>
+    --> Found Docker image b72b49b (18 months old) from registry.access.redhat.com for "registry.access.redhat.com/jboss-eap-7/eap70-openshift:latest"
+    …
+    --> Success
+    ```
 
-$ oc get build -n jmx
-NAME                     TYPE     FROM          STATUS     STARTED          DURATION
-jboss-eap-prometheus-1   Docker   Git@23160b8   Complete   12 minutes ago   2m47s
-$ oc get imagestream -n jmx
-NAME                   IMAGE REPOSITORY                                                                                                           TAGS     UPDATED
-eap70-openshift        default-route-openshift-image-registry.apps.cluster-tokyo-c2f7.tokyo-c2f7.openshiftworkshop.com/jmx/eap70-openshift        latest   5 minutes ago
-jboss-eap-prometheus   default-route-openshift-image-registry.apps.cluster-tokyo-c2f7.tokyo-c2f7.openshiftworkshop.com/jmx/jboss-eap-prometheus   latest   3 minutes ago
-```
+1. ビルドの状況をocコマンドと、OpenShift4コンソールからも確認します。
 
-OpenShift Portalにログインして、[Builds]>[Image Streams]から、ビルドしたイメージがImageStreamに登録されていることも確認
+    ```
+    $ oc logs -f bc/jboss-eap-prometheus
+    …
+    Writing manifest to image destination
+    Storing signatures
+    Push successful
+    ※イメージがPushされると動的にログから開放されるので待つ。
+    (もし「Errorとなってしまった場合は」、[Ctl] + [C]で出て再度やり直す)
 
-![ImageStream](images/imagestream_jboss.jpg "jboss-eap-prometheus")
+    $ oc get build -n jmx-<User_ID>    
+    NAME                     TYPE     FROM          STATUS     STARTED          DURATION
+    jboss-eap-prometheus-1   Docker   Git@23160b8   Complete   38 minutes ago   1m28s    
+    
+    $ oc get imagestream -n jmx-<User_ID>
+    NAME                   IMAGE REPOSITORY                                                                   TAGS     UPDATED
+    eap70-openshift        image-registry.openshift-image-registry.svc:5000/jmx-<User_ID>/eap70-openshift        latest   37 minutes ago
+    jboss-eap-prometheus   image-registry.openshift-image-registry.svc:5000/jmx-<User_ID>/jboss-eap-prometheus   latest   36 minutes ago
+    ```
+
+    OpenShift4コンソールにログインして，[Builds]>[Image Streams]から，ビルドしたイメージがImageStreamに登録されていることも確認しましょう。
+
+    ![ImageStream](images/ocp4-i-lab1-1-imagestream-jboss.png "jboss-eap-prometheus")
 
 ### 1-2-3. アプリケーションデプロイ  
 
-次に、登録した「jboss-eap-prometheus」を利用して、アプリケーションを展開   
-展開の際に、Java Agent用JARファイルやJMX Exporter設定ファイルのパスを環境変数(jmx-prometheus.jar=9404)で指定しておく。   
-```
-$ export JBOSS_HOME=/opt/eap
-$ oc new-app -i jboss-eap-prometheus:latest \
-  -n jmx \
-  --name=jboss-eap-prometheus \
-  -e PREPEND_JAVA_OPTS="-javaagent:${JBOSS_HOME}/prometheus/jmx-prometheus.jar=9404:${JBOSS_HOME}/prometheus/config.yaml"
---> Found image 55806df (About a minute old) in image stream "jmx/jboss-eap-prometheus" under tag "latest" for "jboss-eap-prometheus:latest"
-…
---> Success
-    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
-     'oc expose svc/jboss-eap-prometheus'
-    Run 'oc status' to view your app.
-```
+1. アプリケーションの展開
 
+    ここでは，登録した「jboss-eap-prometheus」を利用して，アプリケーションを展開します。  
+    展開の際には，Java Agent用JARファイルやJMX Exporter設定ファイルのパスを環境変数(jmx-prometheus.jar=9404)で指定しておきましょう。
 
-展開したアプリケーションを確認。この時点で「jboss-eap-prometheus-1」がRunning状態になれば、デプロイ成功。  
-JMX Exporter はデフォルトで9404ポートを公開する。
+    ```
+    $ export JBOSS_HOME=/opt/eap
+    $ oc new-app -i jboss-eap-prometheus:latest \
+      -n jmx-<User_ID> \
+      --name=jboss-eap-prometheus \
+      -e PREPEND_JAVA_OPTS="-javaagent:${JBOSS_HOME}/prometheus/jmx-prometheus.jar=9404:${JBOSS_HOME}/prometheus/config.yaml"
+
+    上記を `\` で改行しながら1コマンドとして実行します。
+    
+    --> Found image 55806df (About a minute old) in image stream "jmx-<User_ID>/jboss-eap-prometheus" under tag "latest" for "jboss-eap-prometheus:latest"
+    …
+    --> Success
+        Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+         'oc expose svc/jboss-eap-prometheus'
+        Run 'oc status' to view your app.
+    ```
+
+1. 展開したアプリケーションの確認
+
+    この時点で「jboss-eap-prometheus-1」がRunning状態になれば，デプロイ成功です。  
+    JMX Exporter はデフォルトで9404ポートを公開します。
+
 ```
 $ oc get svc/jboss-eap-prometheus -n jmx
 NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                               AGE
