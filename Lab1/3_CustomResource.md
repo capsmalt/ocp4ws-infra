@@ -26,7 +26,7 @@ JMX Prometheus ExporterのServiceのラベル名(図は「app=jboss-eap-promethe
 
 ## 3-2. Custom Resource Definitionの設定
 
-### 3-1-1. 「Kind: Prometheus」 を設定する
+### 3-1-1. 「Kind: Prometheus」 を設定
 作成したPrometheus Operatorを利用して、「Kind: Prometheus」を作成します。   
 以下のようなPrometheus.specを設定することで、Prometheusの設定が可能です。
 
@@ -48,7 +48,7 @@ JMX Prometheus ExporterのServiceのラベル名(図は「app=jboss-eap-promethe
 -------
 
 「jmx-monitor」プロジェクトの[Catalog]>[Intalled Operators]>[Prometheus Operator]を選択し、[Prometheus]タブの「Create Prometheus」から、以下の「Kind: Prometheus」を定義します。    
-※この際、Projectが「jmx-monitor-<User_ID>」であることを確認。   
+※この際、Projectが「jmx-monitor-<User_ID>」であることを確認します。  
 
 ![Create Prometheus](images/create-prometheus.jpg "Create Prometheus")
 
@@ -96,7 +96,7 @@ prometheus-operator-7767769844-9ln4l   1/1     Running                0         
 ```
 ただしこの時点では、Pod内の3コンテナのうち、1つが起動エラー状態です。
 
-### 3-1-2. PrometheusPodのエラーを解消する
+### 3-1-2. PrometheusPodのエラーを解消
 「Prometheus Operator 0.27.0」は、Prometheus OperatorのBugにより正しくコンテナが起動しません。(Prometheus Operator 0.29.0以上で解決済)    
 したがって、ここではその原因を調査し、ワークアラウンドとしての対応を試みてみましょう。     
 
@@ -157,7 +157,7 @@ $ oc edit statefulset/prometheus-monitoring -n jmx-monitor
 ### rules-configmap-reloaderのMemory Limitを10Miから30Miに引き上げる
 ```
 
-最終的にPrometheusPodが正常に稼働していることを確認する。   
+最終的にPrometheusPodが正常に稼働していることを確認します。   
 
 ```
 $ oc get pod -n jmx-monitor-<User_ID>
@@ -175,7 +175,7 @@ Pod内の3つのコンテナが起動すれば、ワークアラウンドとし�
 今回はあくまでワークアラウンドにて対応しましたが、「Prometheus Operator 0.29.0」以上では、prometheus-config-reloaderのデフォルトのMemory Limitが修正され、解決されています。   
 (参照):  https://github.com/coreos/prometheus-operator/pull/2403/
 
-### 3-1-3. PrometheusのGUIを確認する
+### 3-1-3. PrometheusのGUIを確認
 PrometheusのGUIを表示します。OperatorのServiceに対してRouterを接続します。
 
 ```
@@ -196,7 +196,7 @@ Routerが接続できたら、ブラウザより確認を行ってください�
 
 ![NoTargets](images/non-target-prometheus.jpg "NoTargets")
 
-### 3-1-4. プロジェクト間通信を許可する
+### 3-1-4. プロジェクト間通信を許可
 Prometheus Operatorを配置した「JMX Monitor(jmx-monitor)」プロジェクトとアプリを配置した「JMX Exporter(jmx)」プロジェクト間のネットワークポリシーを設定します。    
 
 * 参照   
@@ -212,7 +212,7 @@ $ oc adm pod-network join-projects --to=jmx jmx-monitor-<User_ID>
 using plugin: "redhat/openshift-ovs-networkpolicy", managing pod network is only supported for openshift multitenant network plugin
 ```
 
-### 3-1-5. 「Kind: ServiceMonitor」を設定する
+### 3-1-5. 「Kind: ServiceMonitor」を設定
 最後にServiceMonitorを設定してJMXの値をPrometheusから取得し、可視化します。    
 以下のような、値を設定することによって、監視対象を特定できます。    
 
@@ -227,7 +227,7 @@ using plugin: "redhat/openshift-ovs-networkpolicy", managing pod network is only
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 
 「jmx-monitor」プロジェクトの[Catalog]>[Intalled Operators]>[Prometheus Operator]を選択し、[ServiceMonitor]タブの「Create ServiceMonitor」から、以下の「Kind: ServiceMonitor」を定義します。
-※この際、Projectが「jmx-monitor」であることを確認。
+※この際、Projectが「jmx-monitor」であることを確認します。
 
 ![Create ServiceMonitor](images/create-servicemonitor.jpg "Create ServiceMonitor")
 
