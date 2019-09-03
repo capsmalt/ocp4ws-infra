@@ -361,7 +361,7 @@ Operator PodをService(type:LoadBanancer)を使用して公開します。
 
 ```
 $ oc expose deployment -n pgo-<User_ID> postgres-operator --type=LoadBalancer
-$ oc get svc -n pgo
+$ oc get svc -n pgo-<User_ID>
 
 NAME                             TYPE           CLUSTER-IP       EXTERNAL-IP                                                                    PORT(S)                                         AGE
 postgres-operator                LoadBalancer   172.30.114.68    a6615bd17b98011e992ee0e4cddef59e-1242048699.ap-northeast-1.elb.amazonaws.com   8443:32455/TCP                                  130m
