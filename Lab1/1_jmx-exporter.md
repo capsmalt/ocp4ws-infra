@@ -223,7 +223,7 @@ NAME       HOST/PORT                                PATH   SERVICES             
 tcp-8080   tcp-8080-jmx.XXX.openshiftworkshop.com          jboss-eap-prometheus   8080                 None
 ```
 
-Host/Port(http://tcp-8080-jmx.XXXX.openshiftworkshop.com)をブラウザ上からアクセスすると、アプリケーションコンテンツが確認できる。   
+Host/Port (http://tcp-8080-jmx.XXXX.openshiftworkshop.com) をブラウザ上からアクセスすると、アプリケーションコンテンツが確認できる。   
     
 ![Jboss Application](images/jboss-eap-prometheus-8080.jpg "jboss-eap-prometheus-8080")
 
@@ -238,7 +238,7 @@ NAME       HOST/PORT                                PATH   SERVICES             
 tcp-9404   tcp-9404-jmx.XXX.openshiftworkshop.com          jboss-eap-prometheus   9404                 None
 ```
 
-Host/Port(tcp-9404-jmx.XXXX.openshiftworkshop.com)をブラウザ上からアクセスすると、JMX Exporterから取得したPromSQLのクエリが確認できる。   
+Host/Port (tcp-9404-jmx.XXXX.openshiftworkshop.com) をブラウザ上からアクセスすると、JMX Exporterから取得したPromSQLのクエリが確認できる。   
     
 ![Jboss Application](images/jboss-eap-prometheus-9404.jpg "jboss-eap-prometheus-9404")
 
