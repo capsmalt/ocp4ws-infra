@@ -26,14 +26,14 @@ Prometheus Operatorは次の機能を提供します。
 Prometheus Operator用のプロジェクトを作成する。
 
 ```
-$ oc new-project jmx-monitor
+$ oc new-project jmx-monitor-<User_ID>
 $ oc project
-Using project "jmx-monitor" on server "https://<OpenShift API>".
+Using project "jmx-monitor-<User_ID>" on server "https://<OpenShift API>".
 ```
 
 ### 2-2-2. Subscriptionを作成  
 ブラウザからOpenShift Portalにログインし、[Catalog]>[Operator Hub]からPrometheusを検索する。   
-この際、プロジェクトが「jvm-monitor」であることを確認しておく。   
+この際、プロジェクトが「jvm-monitor-<User_ID>」であることを確認しておく。   
           
 ![OperatorHub](images/operator-hub.jpg "operator-hub")
 
@@ -44,7 +44,7 @@ OperatorHubの中から、Prometheus Operator(Community)を選択して、[Insta
 
 Subscriptionは、以下の設定で作成する。  
 * Installation Mode  
-A specific namespace on the cluster: [PR] jmx-monitor  
+A specific namespace on the cluster: [PR] jmx-monitor-<User_ID>  
 * Update Channel  
 beta  
 * Approval Strategy  
@@ -70,8 +70,9 @@ Automatic
 ### 2-2-3. CRD/Operatorの確認    
 
 Prometheus OperatorのSubscriptionを作成すると、CRD(Custom Resource Definition)が作成される。
+
 ```
-$ oc get crd -n jmx-monitor |grep monitoring.coreos.com
+$ oc get crd -n jmx-monitor-<User_ID> |grep monitoring.coreos.com
 alertmanagers.monitoring.coreos.com                         2019-08-01T05:51:14Z
 prometheuses.monitoring.coreos.com                          2019-08-01T05:51:14Z
 prometheusrules.monitoring.coreos.com                       2019-08-01T05:51:14Z
@@ -84,19 +85,11 @@ GUIからは[Catalog]>[Installed Operators]>[Prometheus Operator] を確認。�
 ![Prometheus Catalog](images/prometheus-catalog.jpg "prometheus-catalog")
 
 また、Prometheus OperatorがOLMによって配置される。
+
 ```
-$ oc get po -n jmx-monitor
+$ oc get po -n jmx-monitor-<User_ID>
 NAME                                   READY   STATUS    RESTARTS   AGE
 prometheus-operator-7cf7d5f74b-r4qmd   1/1     Running   0          16m
 ```
 
 以上で、Promethus Operatorの準備が整いました。次の[CustomResourceの設定](3_CustomResource.md)作業に進む   
-
-
-
-
-
-
-
-
-
