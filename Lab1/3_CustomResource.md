@@ -124,6 +124,7 @@ $ oc get event |grep Failed
 21m         Warning   Failed                pod/prometheus-monitoring-1                       Error: set memory limit 10485760 too low; should be at least 12582912
 
 $ oc describe pod/prometheus-monitoring-0 -n jmx-monitor-<User_ID>
+
   rules-configmap-reloader:
     Container ID:
     …
@@ -141,6 +142,7 @@ $ oc describe pod/prometheus-monitoring-0 -n jmx-monitor-<User_ID>
   Events:
    …
   Warning  Failed     21m (x8 over 22m)     kubelet, ip-10-0-157-127.ap-northeast-1.compute.internal  Error: set memory limit 10485760 too low; should be at least 12582912
+  
 $ oc get statefulset/prometheus-monitoring
 NAME                    READY   AGE
 prometheus-monitoring   0/2     125m
@@ -152,6 +154,7 @@ prometheus-monitoring   0/2     125m
 ```
 $ oc get statefulset/prometheus-monitoring -n jmx-monitor-<User_ID> -o=jsonpath='{.spec.template.spec.containers[2].args.resources.limits}' 
 map[cpu:25m memory:10Mi]
+
 $ oc edit statefulset/prometheus-monitoring -n jmx-monitor-<User_ID>
 
 ### rules-configmap-reloaderのMemory Limitを10Miから30Miに引き上げる
@@ -165,6 +168,7 @@ NAME                                   READY   STATUS    RESTARTS   AGE
 prometheus-monitoring-0                3/3     Running   1          34m
 prometheus-monitoring-1                3/3     Running   1          35m
 prometheus-operator-7767769844-bvlfs   1/1     Running   0          47m
+
 
 $ oc get statefulset/prometheus-monitoring -n jmx-monitor-<User_ID>
 NAME                    READY   AGE
@@ -183,8 +187,10 @@ $ oc get svc -n jmx-monitor-<User_ID>
 NAME                  TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
 prometheus-operated   ClusterIP   None         <none>        9090/TCP   5m39s
 
+
 $ oc expose service prometheus-operated -n jmx-monitor-<User_ID>
 route.route.openshift.io/prometheus-operated exposed
+
 
 $ oc get route -n jmx-monitor-<User_ID>
 NAME                  HOST/PORT                                                   PATH   SERVICES              PORT   TERMINATION   WILDCARD
