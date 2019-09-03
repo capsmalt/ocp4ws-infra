@@ -33,7 +33,7 @@ Using project "jmx-monitor-<User_ID>" on server "https://<OpenShift API>".
 
 ### 2-2-2. Subscriptionを作成  
 ブラウザからOpenShift Portalにログインし、[Catalog]>[Operator Hub]からPrometheusを検索する。   
-この際、プロジェクトが「jvm-monitor-<User_ID>」であることを確認しておく。   
+この際、プロジェクトが「jmx-monitor-<User_ID>」であることを確認しておく。   
           
 ![OperatorHub](images/operator-hub.jpg "operator-hub")
 
