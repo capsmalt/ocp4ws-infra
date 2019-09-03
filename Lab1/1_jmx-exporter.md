@@ -149,7 +149,7 @@ S2I: pom.xml に Dependency をセットし、S2I 実行時に Maven でビル�
 
     OpenShift4コンソールにログインして，[Builds]>[Image Streams]から，ビルドしたイメージがImageStreamに登録されていることも確認しましょう。
 
-    ![ImageStream](images/ocp4-i-lab1-1-imagestream-jboss.png "jboss-eap-prometheus")
+    ![](images/ocp4-i-lab1-1-imagestream-jboss.png)
 
 ### 1-2-3. アプリケーションデプロイ  
 
@@ -185,7 +185,7 @@ $ oc get svc/jboss-eap-prometheus -n jmx-<User_ID>
 NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                               AGE
 jboss-eap-prometheus   ClusterIP   172.30.159.173   <none>        8080/TCP,8443/TCP,8778/TCP,9404/TCP   30s
 
-$ oc get dc/jboss-eap-prometheus
+$ oc get dc/jboss-eap-prometheus -n jmx-<User_ID>
 NAME                   REVISION   DESIRED   CURRENT   TRIGGERED BY
 jboss-eap-prometheus   1          1         1         config,image(jboss-eap-prometheus:latest)
 
