@@ -199,14 +199,6 @@ pgo-apiserver version 4.0.1
 pgoから様々なリソースを制御してみましょう。
 
 ### 2-4-1. PostgreSQLクラスターの作成
-
-対象となるNamespaceを指定します。
-
-```
-export PGO_OPERATOR_NAMESPACE=pgo
-export NAMESPACE=pgo
-```
-
 PostgreSQLクラスターを作成します。
 
 ```
