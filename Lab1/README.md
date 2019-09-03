@@ -24,9 +24,6 @@ JBoss EAPのアプリケーションを立ち上げ、Prometheus JMX Exporterか
 2. [Prometheus Operatorの展開](2_PrometheusOperator.md)  
 3. [CustomResourceの設定](3_CustomResource.md)  
 
-時間が余った場合は、オプションの「AlertManagerの設定」にも挑戦。   
-* [Options: AlertManagerの設定](4_AlertManager.md)
-
 ## References
 
 * JMX Exporter for Prometheus  
