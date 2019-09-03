@@ -148,11 +148,13 @@ prometheus-monitoring   0/2     125m
 ここでは「prometheus-config-reloader」のMemory Limitが10Miに設定されているため、コンテナが起動できない状態となっています。 PrometheusPodは、StatefulSetによって起動されているため、今回は一時的にStatefulSetの「prometheus-config-reloader」のResource Limitを引き上げて対応してみましょう。        
 
 #### VIEDITORで更新
+
 ```
 $ oc get statefulset/prometheus-monitoring -n jmx-monitor -o=jsonpath='{.spec.template.spec.containers[2].args.resources.limits}' 
 map[cpu:25m memory:10Mi]
 $ oc edit statefulset/prometheus-monitoring -n jmx-monitor
-### prometheus-config-reloaderのMemory Limitを10Miから30Miに引き上げる
+
+### rules-configmap-reloaderのMemory Limitを10Miから30Miに引き上げる
 ```
 
 最終的にPrometheusPodが正常に稼働していることを確認する。   
