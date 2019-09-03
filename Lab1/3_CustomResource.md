@@ -227,7 +227,7 @@ using plugin: "redhat/openshift-ovs-networkpolicy", managing pod network is only
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 
 「jmx-monitor」プロジェクトの[Catalog]>[Intalled Operators]>[Prometheus Operator]を選択し、[ServiceMonitor]タブの「Create ServiceMonitor」から、以下の「Kind: ServiceMonitor」を定義します。
-※この際、Projectが「jmx-monitor」であることを確認します。
+※この際、Projectが「jmx-monitor-<User_ID>」であることを確認します。
 
 ![Create ServiceMonitor](images/create-servicemonitor.jpg "Create ServiceMonitor")
 
